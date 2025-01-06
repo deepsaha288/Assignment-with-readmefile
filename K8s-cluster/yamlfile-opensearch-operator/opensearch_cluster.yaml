@@ -1,0 +1,28 @@
+apiVersion: opensearch.opensearch.org/v1
+kind: OpenSearchCluster
+metadata:
+  name: opensearch-cluster
+  namespace: opensearch
+spec:
+  general:
+    version: "2.9.0"
+    serviceName: "opensearch-service"
+  nodePools:
+    - component: "master"
+      replicas: 3
+      resources:
+        requests:
+          memory: "1Gi"
+          cpu: "500m"
+        limits:
+          memory: "2Gi"
+          cpu: "1"
+    - component: "data"
+      replicas: 2
+      resources:
+        requests:
+          memory: "2Gi"
+          cpu: "1"
+        limits:
+          memory: "4Gi"
+          cpu: "2"

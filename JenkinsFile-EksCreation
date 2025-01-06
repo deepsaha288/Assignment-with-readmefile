@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+    environment {
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/deepsaha288/Assignment-with-readmefile.git'  // Git repo containing the Terraform files
+            }
+        }
+        stage('Initialize Terraform') {
+            steps {
+                dir('eks-cluster') {
+                    sh 'terraform init'
+                }
+            }
+        }
+        stage('Apply Terraform Plan for EKS') {
+            steps {
+                dir('eks-cluster') {
+                    sh 'terraform apply -auto-approve'
+                }
+            }
+        }
+        stage('Output EKS Cluster Details') {
+            steps {
+                dir('eks-cluster') {
+                    sh 'terraform output'
+                }
+            }
+        }
+    }
+    post {
+        always {
+            echo 'EKS cluster creation completed.'
+        }
+    }
+}

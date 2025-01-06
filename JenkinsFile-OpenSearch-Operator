@@ -1,0 +1,87 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id') // Ensure correct Jenkins credentials ID
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key') // Ensure correct Jenkins credentials ID
+        GIT_REPO_URL = 'https://github.com/deepsaha288/Assignment-with-readmefile.git'
+        OPERATOR_YAML = 'K8s-cluster/yamlfile-opensearch-operator/operator.yaml'
+        CLUSTER_YAML = 'K8s-cluster/yamlfile-opensearch-operator/opensearch_cluster.yaml'
+        EKS_CLUSTER_NAME = 'opensearch-cluster'
+        REGION = 'ap-south-1'
+        NAMESPACE = 'opensearch'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                echo 'Cloning repository...'
+                git branch: 'main', url: "${env.GIT_REPO_URL}"
+            }
+        }
+
+        stage('Setup Kubeconfig') {
+            steps {
+                echo 'Setting up kubeconfig for the EKS cluster...'
+                script {
+                    def kubeconfigCmd = """
+                        aws eks update-kubeconfig \
+                        --region ${env.REGION} \
+                        --name ${env.EKS_CLUSTER_NAME}
+                    """
+                    sh kubeconfigCmd
+                }
+            }
+        }
+
+        stage('Apply OpenSearch Operator') {
+            steps {
+                echo 'Applying OpenSearch Operator YAML...'
+                script {
+                    def applyOperatorCmd = """
+                        kubectl apply -f ${env.OPERATOR_YAML}
+                    """
+                    sh applyOperatorCmd
+                }
+            }
+        }
+
+        stage('Apply OpenSearch Cluster') {
+            steps {
+                echo 'Applying OpenSearch Cluster YAML...'
+                script {
+                    def applyClusterCmd = """
+                        kubectl apply -f ${env.CLUSTER_YAML}
+                    """
+                    sh applyClusterCmd
+                }
+            }
+        }
+
+        stage('Validate OpenSearch Deployment') {
+            steps {
+                echo 'Validating OpenSearch deployment...'
+                script {
+                    def validationCmd = """
+                        echo "Namespaces:" && kubectl get namespaces &&
+                        echo "Pods in '${env.NAMESPACE}' namespace:" && kubectl get pods -n ${env.NAMESPACE} &&
+                        echo "Services in '${env.NAMESPACE}' namespace:" && kubectl get svc -n ${env.NAMESPACE}
+                    """
+                    sh validationCmd
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline execution completed!'
+        }
+        success {
+            echo 'OpenSearch deployment was successful!'
+        }
+        failure {
+            echo 'OpenSearch deployment failed. Please check the logs!'
+        }
+    }
+}
