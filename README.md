@@ -1,7 +1,7 @@
 Prerequisites
 AWS Account: using my AWS account with appropriate IAM permissions to create resources like EC2, EKS, VPC, and security groups.
 Jenkins Server: A running Jenkins instance for automating the pipeline tasks.
-GitHub Repository: https://github.com/anil-elastiq/elastiq-take-home-assessment/blob/main/OpenSearch.md
+GitHub Repository: https://github.com/deepsaha288/Assignment-with-readmefile.git
 
 Folder Structure
 eks-opensearch-setup/
